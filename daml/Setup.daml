@@ -1,0 +1,74 @@
+module Setup where
+
+import Daml.Script
+import Main
+
+data TestParties = TestParties with
+    customer: Party
+    banker: Party
+
+setupParties : Script TestParties
+setupParties = do
+
+    -- 1. Allocate parties with the given display name
+    banker <- allocateParty "Bank"
+    customer <- allocateParty "Customer"
+
+    return TestParties with
+        customer = customer
+        banker = banker
+
+initializeParties : Script ()
+initializeParties = do
+    (testParties@TestParties{..},testLoanDetails@TestLoanDetails{..}) <- setupLoanDetails
+
+    banker <- allocatePartyWithHint "Banker" (PartyIdHint "BANK")
+    customer <- allocatePartyWithHint "Customer" (PartyIdHint "CUST")
+
+    -- 2. Construct user-ids from text
+    bankId <- validateUserId "Banker"
+    darshanId <- validateUserId "Darshan"
+
+    -- 3. Create users with the given rights
+    createUser (User bankId (Some banker)) [CanActAs banker]
+    createUser (User darshanId (Some customer)) [CanActAs customer]
+
+    submit customer do
+        createCmd HomeLoanApplication with
+            banker = banker
+            customer = customer
+            amount = 200000.0
+            incomePerYear = 90000.0
+            loanDetails = loan1
+    return ()
+
+
+data TestLoanDetails = TestLoanDetails with
+    loan1: LoanDetails
+    loan2: LoanDetails
+    loan3: LoanDetails
+
+setupLoanDetails : Script (TestParties, TestLoanDetails)
+setupLoanDetails = do
+    testParties@TestParties{..} <- setupParties
+    let
+        loan1 = LoanDetails with
+            banker = banker
+            customer = customer
+            amount = 200000.0
+            incomePerYear = 90000.0
+            existingCustomer = Some True
+        loan2 = LoanDetails with
+            banker = banker
+            customer = customer
+            amount = 45500.0
+            incomePerYear = 90000.0
+            existingCustomer = Some True
+        loan3 = LoanDetails with
+            banker = banker
+            customer = customer
+            amount = 35000.0
+            incomePerYear = 90000.0
+            existingCustomer = Some True
+    
+    return (testParties, TestLoanDetails with {loan1, loan2, loan3})

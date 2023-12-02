@@ -1,0 +1,75 @@
+module Main where
+
+type LoanId = ContractId Loan
+
+data LoanDetails = LoanDetails with
+        banker: Party
+        customer: Party
+        amount: Decimal
+        incomePerYear: Decimal
+        existingCustomer: Optional Bool
+            deriving (Eq, Show)
+
+template HomeLoanApplication
+    with
+        banker: Party
+        customer: Party
+        amount: Decimal
+        incomePerYear: Decimal
+        loanDetails: LoanDetails
+    where
+        signatory customer
+        observer banker
+    
+        key(customer, banker): (Party, Party)
+        maintainer key._1
+
+        ensure amount > 0.0                    -- Ensure loan amount is greater than zero
+
+        choice ApproveLoan: LoanId
+            with
+                approver: Party
+            controller approver
+            do
+                assertMsg "Authoriser must be bank" (approver == banker)
+                create Loan with
+                    details = LoanDetails with
+                        banker = banker
+                        amount = amount
+                        customer = customer
+                        incomePerYear = incomePerYear
+                        existingCustomer = Some True
+        choice RejectLoan: ()
+            with
+                approver: Party
+            controller approver
+            do
+                assertMsg "Authoriser must be bank" (approver == banker)
+                return ()
+        
+template Loan
+    with
+        details: LoanDetails
+    where
+        signatory details.banker, details.customer
+
+        ensure details.amount > 0.0             -- Ensure loan amount is greater than zero
+
+        choice PayLoan: ()
+            controller details.customer
+            do
+                return ()
+        
+        nonconsuming choice ModifyLoan: LoanId
+            with
+                newAmount: Decimal
+                loanCid: ContractId Loan
+            controller details.banker
+            do
+                loan <- fetch loanCid
+                archive loanCid
+                assertMsg "New amount must be greater than zero" (newAmount > 0.0)
+                create this with
+                    details = details with
+                        amount = newAmount
+

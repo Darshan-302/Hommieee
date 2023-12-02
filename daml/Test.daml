@@ -1,0 +1,145 @@
+module Test where
+
+import Daml.Script
+import Main
+import Setup
+
+-------------------------------------------
+------------- Happy Path Testing ----------
+-------------------------------------------
+
+------- 1. Apply for loan
+------- 2. Reject loan
+------- 3. Modify loan
+------- 4. Pay off loan
+
+-- 1. In normal scenario, Customer applies for loan and got approved by banker
+testApplyForLoan : Script ()
+testApplyForLoan = script do
+    (testParties@TestParties{..},testLoanDetails@TestLoanDetails{..}) <- setupLoanDetails
+    applicationCid <- submit customer $ createCmd HomeLoanApplication
+        with
+            customer = customer
+            banker = banker
+            amount = 200000.0
+            incomePerYear = 90000.0
+            loanDetails = loan1
+    submit banker $ exerciseCmd applicationCid ApproveLoan
+        with
+            approver = banker
+    return()
+    
+-- 2. Customer applies for loan and got rejected by banker
+testRejectLoan : Script ()
+testRejectLoan = do
+    (testParties@TestParties{..},testLoanDetails@TestLoanDetails{..}) <- setupLoanDetails
+    applicationCid <- submit customer $ createCmd HomeLoanApplication
+        with
+            customer = customer
+            banker = banker
+            amount = 1000000.0
+            incomePerYear = 90000.0
+            loanDetails = loan1
+    submit banker $ exerciseCmd applicationCid RejectLoan
+        with
+            approver = banker
+
+-- 3. Customer modifies loan amount and got approved by banker. Loan amount should be 180000 as for this scenario
+testModifyLoan : Script ()
+testModifyLoan = do
+    (testParties@TestParties{..},testLoanDetails@TestLoanDetails{..}) <- setupLoanDetails
+    applicationCid <- submit customer $ createCmd HomeLoanApplication
+        with
+            customer = customer
+            banker = banker
+            amount = 200000.0
+            incomePerYear = 90000.0
+            loanDetails = loan1
+    loanCid <- submit banker $ exerciseCmd applicationCid ApproveLoan
+        with
+            approver = banker
+    _ <- submit banker $ exerciseCmd loanCid ModifyLoan
+        with
+            newAmount = 180000.0
+            loanCid = loanCid
+    return ()
+
+-- 4. Customer pays off loan amount and got approved by banker
+testPayOffLoan: Script ()
+testPayOffLoan = script do
+    (testParties@TestParties{..},testLoanDetails@TestLoanDetails{..}) <- setupLoanDetails
+    applicationCid <- submit customer $ createCmd HomeLoanApplication
+        with
+            customer = customer
+            banker = banker
+            amount = 200000.0
+            incomePerYear = 90000.0
+            loanDetails = loan1
+    loanCid <- submit banker $ exerciseCmd applicationCid ApproveLoan
+        with
+            approver = banker
+
+    submit customer $ exerciseCmd loanCid PayLoan
+    return ()
+
+---------------------------------------------
+-----------  Unhappy Path Testing -----------
+---------------------------------------------
+
+------  1. Apply for loan with wrong amount
+------  2. Modify loan with wrong amount
+------  3. Apply for loan with wrong banker
+
+-- 1. Customer applies for loan with wrong amount and that should fail bcz amount must be greater than zero
+
+testApplyForLoanWithWrongAmount : Script ()
+testApplyForLoanWithWrongAmount = do
+    (testParties@TestParties{..},testLoanDetails@TestLoanDetails{..}) <- setupLoanDetails
+    applicationCid <- submitMustFail customer $ createCmd HomeLoanApplication
+        with
+            customer = customer
+            banker = banker
+            amount = 0.0
+            incomePerYear = 90000.0
+            loanDetails = loan1
+    return ()
+
+-- 2. Customer modifies loan with wrong amount and that should fail bcz amount must be different than original
+testModifyLoanWithWrongAmount : Script ()
+testModifyLoanWithWrongAmount = do
+    (testParties@TestParties{..},testLoanDetails@TestLoanDetails{..}) <- setupLoanDetails
+    applicationCid <- submit customer $ createCmd HomeLoanApplication
+        with
+            customer = customer
+            banker = banker
+            amount = 200000.0
+            incomePerYear = 90000.0
+            loanDetails = loan1
+    loanCid <- submit
+        banker $ exerciseCmd applicationCid ApproveLoan
+            with
+                approver = banker
+    _ <- submitMustFail
+        customer $ exerciseCmd loanCid ModifyLoan
+            with
+                newAmount = 0.0
+                loanCid = loanCid
+    return ()
+
+-- 3. Customer applies for loan with wrong banker and that should fail bcz banker must be bank
+testApplyForLoanWithWrongBanker : Script ()
+testApplyForLoanWithWrongBanker = do
+    (testParties@TestParties{..},testLoanDetails@TestLoanDetails{..}) <- setupLoanDetails
+    applicationCid <- submit customer $ createCmd HomeLoanApplication
+        with
+            customer = customer
+            banker = banker
+            amount = 200000.0
+            incomePerYear = 90000.0
+            loanDetails = loan1
+    
+    loanCid <- submitMustFail
+        banker $ exerciseCmd applicationCid ApproveLoan
+            with
+                approver = customer
+    return ()
