@@ -2,7 +2,7 @@
 Hommieee is a HomeLoan application service for bank that lets customer apply for loan and the banker can either accept or decline the loan application.
 
 ### I. Overview
-overview - Tensor is a bank loan application service that lets customers apply for loan and the banker can either accept or decline the loan application. Banker can modify Loan as well. This project uses the Proposal Accept design pattern.
+overview - Hommieee is a bank HomeLoan application service that lets customers apply for loan and the banker can either accept or decline the loan application. Banker can modify Loan as well. This project uses the Proposal Accept design pattern.
 
 
 ### II. Workflow
