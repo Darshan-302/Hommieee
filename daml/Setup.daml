@@ -39,7 +39,6 @@ initializeParties = do
             customer = customer
             amount = 200000.0
             incomePerYear = 90000.0
-            loanDetails = loan1
     return ()
 
 

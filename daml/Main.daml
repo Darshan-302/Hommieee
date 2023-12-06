@@ -16,7 +16,6 @@ template HomeLoanApplication
         customer: Party
         amount: Decimal
         incomePerYear: Decimal
-        loanDetails: LoanDetails
     where
         signatory customer
         observer banker
@@ -28,10 +27,9 @@ template HomeLoanApplication
 
         choice ApproveLoan: LoanId
             with
-                approver: Party
-            controller approver
+                banker: Party
+            controller banker
             do
-                assertMsg "Authoriser must be bank" (approver == banker)
                 create Loan with
                     details = LoanDetails with
                         banker = banker
@@ -41,10 +39,10 @@ template HomeLoanApplication
                         existingCustomer = Some True
         choice RejectLoan: ()
             with
-                approver: Party
-            controller approver
+                banker: Party
+            controller banker
             do
-                assertMsg "Authoriser must be bank" (approver == banker)
+                assertMsg "Authoriser must be bank" (banker == banker)
                 return ()
         
 template Loan
@@ -52,6 +50,7 @@ template Loan
         details: LoanDetails
     where
         signatory details.banker, details.customer
+        observer details.banker
 
         ensure details.amount > 0.0             -- Ensure loan amount is greater than zero
 
@@ -63,13 +62,18 @@ template Loan
         nonconsuming choice ModifyLoan: LoanId
             with
                 newAmount: Decimal
-                loanCid: ContractId Loan
+                loanCid: LoanId
             controller details.banker
             do
                 loan <- fetch loanCid
                 archive loanCid
-                assertMsg "New amount must be greater than zero" (newAmount > 0.0)
-                create this with
-                    details = details with
-                        amount = newAmount
-
+                if newAmount /= details.amount then do
+                    create this with
+                        details = details with
+                            amount = newAmount
+                else do
+                    assertMsg " New amount must be different from original amount"(newAmount /= details.amount)
+                    create this with
+                        details = details with
+                            amount = details.amount
+    
