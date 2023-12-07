@@ -38,7 +38,8 @@ initializeParties = do
             banker = banker
             customer = customer
             amount = 200000.0
-            incomePerYear = 90000.0
+            incomePerYear = Some 90000.00
+            existingCustomer = True
     return ()
 
 
@@ -55,19 +56,19 @@ setupLoanDetails = do
             banker = banker
             customer = customer
             amount = 200000.0
-            incomePerYear = 90000.0
-            existingCustomer = Some True
+            incomePerYear = Some 90000.0
+            existingCustomer = True
         loan2 = LoanDetails with
             banker = banker
             customer = customer
             amount = 45500.0
-            incomePerYear = 90000.0
-            existingCustomer = Some True
+            incomePerYear = Some 90000.0
+            existingCustomer = True
         loan3 = LoanDetails with
             banker = banker
             customer = customer
             amount = 35000.0
-            incomePerYear = 90000.0
-            existingCustomer = Some True
+            incomePerYear = Some 90000.0
+            existingCustomer = True
     
     return (testParties, TestLoanDetails with {loan1, loan2, loan3})

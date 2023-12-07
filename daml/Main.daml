@@ -6,8 +6,8 @@ data LoanDetails = LoanDetails with
         banker: Party
         customer: Party
         amount: Decimal
-        incomePerYear: Decimal
-        existingCustomer: Optional Bool
+        incomePerYear: Optional Decimal
+        existingCustomer: Bool
             deriving (Eq, Show)
 
 template HomeLoanApplication
@@ -15,7 +15,8 @@ template HomeLoanApplication
         banker: Party
         customer: Party
         amount: Decimal
-        incomePerYear: Decimal
+        incomePerYear: Optional Decimal
+        existingCustomer: Bool
     where
         signatory customer
         observer banker
@@ -30,13 +31,22 @@ template HomeLoanApplication
                 banker: Party
             controller banker
             do
-                create Loan with
-                    details = LoanDetails with
-                        banker = banker
-                        amount = amount
-                        customer = customer
-                        incomePerYear = incomePerYear
-                        existingCustomer = Some True
+                if existingCustomer then do
+                    create Loan with
+                        details = LoanDetails with
+                            banker = banker
+                            amount = amount
+                            customer = customer
+                            incomePerYear = incomePerYear
+                            existingCustomer = True
+                else do
+                    create Loan with
+                        details = LoanDetails with
+                            banker = banker
+                            amount = amount
+                            customer = customer
+                            incomePerYear = incomePerYear
+                            existingCustomer = False
         choice RejectLoan: ()
             with
                 banker: Party
@@ -62,18 +72,11 @@ template Loan
         nonconsuming choice ModifyLoan: LoanId
             with
                 newAmount: Decimal
-                loanCid: LoanId
             controller details.banker
             do
-                loan <- fetch loanCid
-                archive loanCid
-                if newAmount /= details.amount then do
-                    create this with
-                        details = details with
-                            amount = newAmount
-                else do
-                    assertMsg " New amount must be different from original amount"(newAmount /= details.amount)
-                    create this with
-                        details = details with
-                            amount = details.amount
+                assertMsg" New amount must be different from original amount"(newAmount /= details.amount)
+                archive self
+                create this with
+                    details = details with
+                        amount = newAmount
     
