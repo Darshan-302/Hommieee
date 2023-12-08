@@ -57,18 +57,25 @@ setupLoanDetails = do
             customer = customer
             amount = 200000.0
             incomePerYear = Some 90000.0
+            interestRate = 0.05
             existingCustomer = True
+            note = Some "Loan approved for existing customer"
+        
         loan2 = LoanDetails with
             banker = banker
             customer = customer
             amount = 45500.0
             incomePerYear = Some 90000.0
-            existingCustomer = True
+            interestRate = 0.09
+            existingCustomer = False
+            note = Some "Loan approved for non-existing customer"
         loan3 = LoanDetails with
             banker = banker
             customer = customer
             amount = 35000.0
+            interestRate = 0.05
             incomePerYear = Some 90000.0
             existingCustomer = True
+            note = Some "Loan approved for existing customer"
     
     return (testParties, TestLoanDetails with {loan1, loan2, loan3})

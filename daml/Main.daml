@@ -7,6 +7,8 @@ data LoanDetails = LoanDetails with
         customer: Party
         amount: Decimal
         incomePerYear: Optional Decimal
+        interestRate: Decimal
+        note: Optional Text
         existingCustomer: Bool
             deriving (Eq, Show)
 
@@ -38,21 +40,24 @@ template HomeLoanApplication
                             amount = amount
                             customer = customer
                             incomePerYear = incomePerYear
+                            interestRate = 0.05         -- Assigning interest rate as 5% for existing customer
                             existingCustomer = True
+                            note = Some "Loan approved for existing customer"
                 else do
                     create Loan with
                         details = LoanDetails with
                             banker = banker
                             amount = amount
                             customer = customer
-                            incomePerYear = incomePerYear
+                            incomePerYear = Some 50000.0
+                            interestRate = 0.09         -- Assigning interest rate as 9% for non-existing customer
                             existingCustomer = False
+                            note = Some "Loan approved for non-existing customer"
         choice RejectLoan: ()
             with
                 banker: Party
             controller banker
             do
-                assertMsg "Authoriser must be bank" (banker == banker)
                 return ()
         
 template Loan
