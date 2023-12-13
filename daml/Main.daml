@@ -29,8 +29,6 @@ template HomeLoanApplication
         ensure amount > 0.0                    -- Ensure loan amount is greater than zero
 
         choice ApproveLoan: LoanId
-            with
-                banker: Party
             controller banker
             do
                 if existingCustomer then do
@@ -54,8 +52,6 @@ template HomeLoanApplication
                             existingCustomer = False
                             note = Some "Loan approved for non-existing customer"
         choice RejectLoan: ()
-            with
-                banker: Party
             controller banker
             do
                 return ()

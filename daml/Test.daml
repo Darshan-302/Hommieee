@@ -25,8 +25,6 @@ testApplyForLoan = script do
             incomePerYear = Some 90000.0
             existingCustomer = True
     submit banker $ exerciseCmd applicationCid ApproveLoan
-        with
-            banker
     return()
     
 -- 2. Customer applies for loan and got rejected by banker
@@ -41,7 +39,6 @@ testRejectLoan = do
             incomePerYear = Some 90000.0
             existingCustomer = True
     submit banker $ exerciseCmd applicationCid RejectLoan
-        with banker
 
 -- 3. Customer re-applies with an updated loan application. The banker approves it and modifies the loan amount based on needs. Loan amount should be 180000 as for this scenario
 testModifyLoan : Script ()
@@ -55,13 +52,12 @@ testModifyLoan = do
             incomePerYear = Some 90000.0
             existingCustomer = True
     loanCid <- submit banker $ exerciseCmd applicationCid ApproveLoan
-        with banker
     _ <- submit banker $ exerciseCmd loanCid ModifyLoan
         with
             newAmount = 180000.0
     return ()
 
--- 4. Customer pays off loan amount and got approved by banker
+-- 4. Customer pays off loan amount which got approved by banker (Normal scenario to payoff loan)
 testPayOffLoan: Script ()
 testPayOffLoan = script do
     (testParties@TestParties{..},testLoanDetails@TestLoanDetails{..}) <- setupLoanDetails
@@ -73,7 +69,6 @@ testPayOffLoan = script do
             incomePerYear = Some 90000.0
             existingCustomer = True
     loanCid <- submit banker $ exerciseCmd applicationCid ApproveLoan
-        with banker
 
     submit customer $ exerciseCmd loanCid PayLoan
     return ()
@@ -113,12 +108,10 @@ testModifyLoanWithWrongAmount = do
             existingCustomer = True
     loanCid <- submit
         banker $ exerciseCmd applicationCid ApproveLoan
-            with
-                banker = banker
     _ <- submitMustFail
-        customer $ exerciseCmd loanCid ModifyLoan
+        banker $ exerciseCmd loanCid ModifyLoan
             with
-                newAmount = 0.0
+                newAmount = 200000.0
     return ()
 
 -- 3. Customer applies for loan with wrong banker and that should fail bcz banker must be bank
@@ -133,7 +126,5 @@ testApplyForLoanWithWrongBanker = do
             incomePerYear = Some 90000.0
             existingCustomer = True
     loanCid <- submitMustFail
-        banker $ exerciseCmd applicationCid ApproveLoan
-            with
-                banker = customer
+        customer $ exerciseCmd applicationCid ApproveLoan
     return ()
