@@ -114,7 +114,7 @@ testModifyLoanWithWrongAmount = do
                 newAmount = 200000.0
     return ()
 
--- 3. Customer applies for loan with wrong banker and that should fail bcz banker must be bank
+-- 3. Customer applies for loan with wrong banker(Customer is not allowed to apply for loan) and that should fail bcz banker must be bank
 testApplyForLoanWithWrongBanker : Script ()
 testApplyForLoanWithWrongBanker = do
     (testParties@TestParties{..},testLoanDetails@TestLoanDetails{..}) <- setupLoanDetails

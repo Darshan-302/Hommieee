@@ -50,6 +50,8 @@ data TestLoanDetails = TestLoanDetails with
 
 setupLoanDetails : Script (TestParties, TestLoanDetails)
 setupLoanDetails = do
+
+    -- 4. Set up loan details for the test scenario
     testParties@TestParties{..} <- setupParties
     let
         loan1 = LoanDetails with
@@ -69,6 +71,7 @@ setupLoanDetails = do
             interestRate = 0.09
             existingCustomer = False
             note = Some "Loan approved for non-existing customer"
+            
         loan3 = LoanDetails with
             banker = banker
             customer = customer

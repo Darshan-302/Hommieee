@@ -51,6 +51,7 @@ template HomeLoanApplication
                             interestRate = 0.09         -- Assigning interest rate as 9% for non-existing customer
                             existingCustomer = False
                             note = Some "Loan approved for non-existing customer"
+                            
         choice RejectLoan: ()
             controller banker
             do
