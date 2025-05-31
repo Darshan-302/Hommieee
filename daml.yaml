@@ -8,3 +8,5 @@ dependencies:
   - daml-script
 init-script: Setup:initializeParties
 
+
+
